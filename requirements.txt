@@ -2,4 +2,4 @@ streamlit
 PyPDF2
 google.generativeai
 python-dotenv
-openai
+openai>=1.0.0

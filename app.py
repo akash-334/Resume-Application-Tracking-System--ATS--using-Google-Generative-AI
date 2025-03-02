@@ -13,15 +13,15 @@ if not openai_api_key:
 
 # Function to get response from ChatGPT model
 def get_chatgpt_response(input_text):
-    openai.api_key = openai_api_key  # Set the API key securely
-    response = openai.ChatCompletion.create(
-        model="gpt-4",  
+    client = openai.OpenAI()  # Create a client instance
+    response = client.chat.completions.create(
+        model="gpt-4",
         messages=[
             {"role": "system", "content": "You are an ATS specializing in tech resumes."},
             {"role": "user", "content": input_text}
         ]
     )
-    return response["choices"][0]["message"]["content"]
+    return response.choices[0].message.content
 
 # Function to extract text from the uploaded PDF
 def input_pdf_text(uploaded_file):

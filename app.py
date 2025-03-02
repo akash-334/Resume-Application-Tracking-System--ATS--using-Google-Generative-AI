@@ -1,65 +1,25 @@
 import streamlit as st
-import google.generativeai as genai
+import openai
 import PyPDF2 as pdf
 
-# Directly use the API key here
-google_api_key = 'AIzaSyA1vr7sklCDHK-IKsb5LelVdoGCpL8b8ng'
+# OpenAI API Key (Replace with your actual API key)
+openai_api_key = "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"
 
-# Configure the API with the key
-genai.configure(api_key=google_api_key)
+# Function to get response from ChatGPT model
+def get_chatgpt_response(input_text):
+    response = openai.ChatCompletion.create(
+        model="gpt-4",  # You can use "gpt-3.5-turbo" for a cheaper option
+        messages=[{"role": "system", "content": "You are an ATS specializing in tech resumes."},
+                  {"role": "user", "content": input_text}]
+    )
+    return response["choices"][0]["message"]["content"]
 
-# Function to get response from Gemini model
-def get_gemini_response(input):
-    # First, let's list the available models to find one we can use
-    def get_gemini_response(input):
-    try:
-        models = genai.list_models()
-        available_models = [model.name for model in models]
-        st.write("Available models:", available_models)
-        
-        # List of models to try in order of preference
-        preferred_models = [
-            "models/gemini-2.0-pro-exp",  # Try the newest models first
-            "models/gemini-2.0-flash",
-            "models/gemini-1.5-pro",
-            "models/gemini-1.5-flash",
-            "models/gemini-1.5-flash-8b"
-        ]
-        
-        # Find the first preferred model that's available
-        selected_model = None
-        for model_name in preferred_models:
-            if model_name in available_models:
-                selected_model = model_name
-                break
-                
-        if not selected_model:
-            # If none of our preferred models are available, use the newest non-vision model
-            valid_models = [m for m in available_models if 
-                           "gemini" in m.lower() and 
-                           "vision" not in m.lower() and 
-                           "1.0" not in m]  # Skip deprecated models
-            
-            if valid_models:
-                selected_model = valid_models[0]
-            else:
-                raise Exception("No suitable Gemini models available")
-        
-        st.write(f"Using model: {selected_model}")
-        model = genai.GenerativeModel(selected_model)
-        
-        response = model.generate_content(input)
-        return response.text
-    except Exception as e:
-        st.error(f"Error: {str(e)}")
-        return f"API Error: {str(e)}"
 # Function to extract text from the uploaded PDF
 def input_pdf_text(uploaded_file):
     reader = pdf.PdfReader(uploaded_file)
     text = ""
     for page in range(len(reader.pages)):
-        page = reader.pages[page]
-        text += str(page.extract_text())
+        text += reader.pages[page].extract_text() or ""  # Avoid NoneType error
     return text
 
 # Prompt Template
@@ -94,8 +54,8 @@ if submit:
         # Format the input prompt
         formatted_prompt = input_prompt.format(text=text, jd=jd)
         
-        # Get response from the Gemini model
-        response = get_gemini_response(formatted_prompt)
+        # Get response from OpenAI ChatGPT
+        response = get_chatgpt_response(formatted_prompt)
         
         # Display the response
         st.subheader(response)

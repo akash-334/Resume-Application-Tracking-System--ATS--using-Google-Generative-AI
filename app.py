@@ -15,7 +15,7 @@ if not openai_api_key:
 def get_chatgpt_response(input_text):
     client = openai.OpenAI()  # Create a client instance
     response = client.chat.completions.create(
-        model="gpt-4",
+        model="gpt-4o-mini",
         messages=[
             {"role": "system", "content": "You are an ATS specializing in tech resumes."},
             {"role": "user", "content": input_text}

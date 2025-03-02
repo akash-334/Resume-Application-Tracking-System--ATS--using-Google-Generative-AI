@@ -3,7 +3,7 @@ import google.generativeai as genai
 import PyPDF2 as pdf
 
 # Directly use the API key here
-google_api_key = 'AIzaSyAeqXyqQjhwnR8vk35YkshzUvwARL6sIys'
+google_api_key = 'AIzaSyCEk8kJCkN0JZRhkoRE82NffK_eBbNw_Rw'
 
 # Configure the API with the key
 genai.configure(api_key=google_api_key)

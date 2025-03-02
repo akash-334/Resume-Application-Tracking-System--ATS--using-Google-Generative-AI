@@ -13,10 +13,13 @@ openai_api_key = os.getenv("openai_api_key")
 
 # Function to get response from ChatGPT model
 def get_chatgpt_response(input_text):
+    openai.api_key = openai_api_key  # Set the API key securely
     response = openai.ChatCompletion.create(
-        model="gpt-4",  # You can use "gpt-3.5-turbo" for a cheaper option
-        messages=[{"role": "system", "content": "You are an ATS specializing in tech resumes."},
-                  {"role": "user", "content": input_text}]
+        model="gpt-4",  
+        messages=[
+            {"role": "system", "content": "You are an ATS specializing in tech resumes."},
+            {"role": "user", "content": input_text}
+        ]
     )
     return response["choices"][0]["message"]["content"]
 

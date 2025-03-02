@@ -1,24 +1,34 @@
 import streamlit as st
-import google.generativeai as genai
 import PyPDF2 as pdf
-import os  # Import os to access environment variables
+import os
+import requests  # To call Llama API
 
-# Get Gemini API Key from environment variables
-gemini_api_key = os.getenv("GEMINI_API_KEY")
+# Get Llama API Key from environment variables
+llama_api_key = os.getenv("LLAMA_API_KEY")
 
 # Check if API Key is set
-if not gemini_api_key:
-    st.error("Google Gemini API Key is missing. Set it as an environment variable in Render.")
+if not llama_api_key:
+    st.error("Llama API Key is missing. Set it as an environment variable in Render.")
     st.stop()
 
-# Configure Gemini AI Client
-genai.configure(api_key=gemini_api_key)
-
-# Function to get response from Gemini 2.0 Flash
-def get_gemini_response(input_text):
-    model = genai.GenerativeModel("gemini-2.0-flash")  # Using Gemini 1.5 Flash (latest fast model)
-    response = model.generate_content(input_text)
-    return response.text
+# Function to get response from Llama 3
+def get_llama_response(input_text):
+    url = "https://api.together.xyz/v1/chat/completions"  # Together AI Llama 3 API
+    headers = {
+        "Authorization": f"Bearer {llama_api_key}",
+        "Content-Type": "application/json"
+    }
+    data = {
+        "model": "meta-llama/llama-3-8b",  # Choose the specific Llama model
+        "messages": [
+            {"role": "system", "content": "You are an ATS specializing in tech resumes."},
+            {"role": "user", "content": input_text}
+        ],
+        "temperature": 0.7
+    }
+    
+    response = requests.post(url, headers=headers, json=data)
+    return response.json()["choices"][0]["message"]["content"]
 
 # Function to extract text from the uploaded PDF
 def input_pdf_text(uploaded_file):
@@ -44,7 +54,7 @@ I want the response in one single string having the structure:
 """
 
 # Streamlit App UI
-st.title("Smart ATS (Powered by Gemini 2.0 Flash)")
+st.title("Smart ATS (Powered by Llama 3)")
 st.text("Improve Your Resume ATS")
 jd = st.text_area("Paste the Job Description")
 uploaded_file = st.file_uploader("Upload Your Resume", type="pdf", help="Please upload the PDF")
@@ -60,8 +70,8 @@ if submit:
         # Format the input prompt
         formatted_prompt = input_prompt.format(text=text, jd=jd)
         
-        # Get response from Gemini
-        response = get_gemini_response(formatted_prompt)
+        # Get response from Llama 3
+        response = get_llama_response(formatted_prompt)
         
         # Display the response
         st.subheader(response)

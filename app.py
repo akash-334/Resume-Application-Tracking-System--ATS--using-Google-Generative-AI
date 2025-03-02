@@ -3,7 +3,13 @@ import openai
 import PyPDF2 as pdf
 
 # OpenAI API Key (Replace with your actual API key)
-openai_api_key = "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"
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+load_dotenv()
+
+openai_api_key = os.getenv("openai_api_key")
 
 # Function to get response from ChatGPT model
 def get_chatgpt_response(input_text):

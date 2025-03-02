@@ -2,9 +2,11 @@ import streamlit as st
 import PyPDF2 as pdf
 import os
 import json
+from dotenv import load_dotenv
 from langchain_groq import ChatGroq
 
 # Load API Key from Render Environment Variables
+load_dotenv()  # Load .env file if running locally
 groq_api_key = os.getenv("GROQ_API_KEY")
 
 if not groq_api_key:
@@ -12,7 +14,7 @@ if not groq_api_key:
     st.stop()
 
 # Initialize LLM
-llm = ChatGroq(groq_api_key=groq_api_key, model_name="llama-3.1-8b-instant")
+llm = ChatGroq(groq_api_key=groq_api_key, model_name="llama3-8b-8192")
 
 # Function to get response from Llama 3
 def get_llama_response(input_text):
@@ -95,33 +97,42 @@ if submit:
             
             # Get response from Llama 3
             response = get_llama_response(formatted_prompt)
-            
-            # Display Results
-            with result_container:
-                st.markdown("## 📊 Analysis Results")
-                
-                try:
-                    result = json.loads(response)  # Try parsing as JSON
+
+            if response is None:
+                st.error("❌ No response from the AI. Please try again.")
+            else:
+                with result_container:
+                    st.markdown("## 📊 Analysis Results")
                     
-                    col1, col2 = st.columns([1, 1])
-                    
-                    with col1:
-                        st.metric("📊 JD Match", result["JD Match"])
-                        
-                        st.markdown("### 🔍 Missing Keywords")
-                        if result["MissingKeywords"]:
-                            for keyword in result["MissingKeywords"]:
-                                st.markdown(f"- {keyword}")
+                    try:
+                        # Extract response content
+                        if isinstance(response, dict):  
+                            result = response
+                        elif hasattr(response, "content"):  
+                            result = json.loads(response.content)
                         else:
-                            st.markdown("✅ No missing keywords found.")
-                    
-                    with col2:
-                        st.markdown("### 📝 Profile Summary")
-                        st.markdown(result["Profile Summary"])
-                    
-                except json.JSONDecodeError:
-                    st.warning("⚠️ Could not parse the response as JSON. Showing raw response:")
-                    st.markdown(response)
+                            st.error("Unexpected response format from the API.")
+                            st.stop()
+                        
+                        col1, col2 = st.columns([1, 1])
+                        
+                        with col1:
+                            st.metric("📊 JD Match", result["JD Match"])
+                            
+                            st.markdown("### 🔍 Missing Keywords")
+                            if result["MissingKeywords"]:
+                                for keyword in result["MissingKeywords"]:
+                                    st.markdown(f"- {keyword}")
+                            else:
+                                st.markdown("✅ No missing keywords found.")
+                        
+                        with col2:
+                            st.markdown("### 📝 Profile Summary")
+                            st.markdown(result["Profile Summary"])
+                        
+                    except json.JSONDecodeError:
+                        st.warning("⚠️ Could not parse the response as JSON. Showing raw response:")
+                        st.markdown(response)
 
 # Footer
 st.markdown("---")

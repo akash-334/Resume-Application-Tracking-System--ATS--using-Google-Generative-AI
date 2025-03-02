@@ -10,9 +10,31 @@ genai.configure(api_key=google_api_key)
 
 # Function to get response from Gemini model
 def get_gemini_response(input):
-    model = genai.GenerativeModel('gemini-1.5-flash')
-    response = model.generate_content(input)
-    return response.text
+    # First, let's list the available models to find one we can use
+    try:
+        models = genai.list_models()
+        available_models = [model.name for model in models]
+        st.write("Available models:", available_models)
+        
+        # Check if any Gemini models are available
+        gemini_models = [model for model in available_models if "gemini" in model.lower()]
+        
+        if gemini_models:
+            # Use the first available Gemini model
+            model_name = gemini_models[0]
+            st.write(f"Using model: {model_name}")
+            model = genai.GenerativeModel(model_name)
+        else:
+            # Default to a specific model if no Gemini models found
+            model_name = "models/gemini-1.5-flash"  # Try with the full path
+            st.write(f"No Gemini models found. Trying with: {model_name}")
+            model = genai.GenerativeModel(model_name)
+        
+        response = model.generate_content(input)
+        return response.text
+    except Exception as e:
+        st.error(f"Error: {str(e)}")
+        return f"API Error: {str(e)}"
 
 # Function to extract text from the uploaded PDF
 def input_pdf_text(uploaded_file):

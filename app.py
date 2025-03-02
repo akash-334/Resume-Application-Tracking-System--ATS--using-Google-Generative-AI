@@ -1,13 +1,13 @@
 import streamlit as st
 import PyPDF2 as pdf
 import os
-import re
 import json
+import re
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq
 
-# ✅ Load API Key from Environment Variables (Render Deployment)
-load_dotenv()  
+# ✅ Load API Key from Environment Variables
+load_dotenv()
 groq_api_key = os.getenv("GROQ_API_KEY")
 
 if not groq_api_key:
@@ -17,7 +17,7 @@ if not groq_api_key:
 # ✅ Initialize LLM (Llama 3 via Groq)
 llm = ChatGroq(groq_api_key=groq_api_key, model_name="llama3-8b-8192")
 
-# ✅ Function to get response from AI
+# ✅ Function to Get Response from Llama 3
 def get_llama_response(input_text):
     try:
         with st.spinner("🔍 Analyzing resume against job description..."):
@@ -27,7 +27,7 @@ def get_llama_response(input_text):
         st.error(f"❌ API Error: {str(e)}")
         return None
 
-# ✅ Function to extract text from PDF
+# ✅ Function to Extract Text from PDF
 def extract_text_from_pdf(uploaded_file):
     try:
         reader = pdf.PdfReader(uploaded_file)
@@ -37,66 +37,50 @@ def extract_text_from_pdf(uploaded_file):
         st.error(f"❌ Error extracting text from PDF: {str(e)}")
         return ""
 
-# ✅ Formatting Prompt for Llama 3
+# ✅ Improved Prompt to Force JSON Output
 input_prompt = """
-Hey, act like a skilled ATS (Applicant Tracking System) with deep expertise in software engineering, data science, and big data.
-Evaluate the resume based on the provided job description. Consider the competitive job market and provide detailed feedback.
+You are a highly accurate ATS (Applicant Tracking System) with expertise in software engineering, data science, and big data.
+Analyze the resume against the job description and return JSON only.
 
-Assign a **matching percentage**, list missing **keywords**, and generate a **profile summary**.
-
-**Resume:** {text}
-**Job Description:** {jd}
-
-Provide a structured response in JSON format:
-{{
+JSON OUTPUT FORMAT:
+{
     "JD Match": "X%",
     "MissingKeywords": ["keyword1", "keyword2"],
     "Profile Summary": "Your profile summary here"
-}}
+}
+
+Resume:
+{text}
+
+Job Description:
+{jd}
 """
 
-# ✅ Function to Format AI Response
+# ✅ Function to Format & Display AI Response
 def format_ai_response(response):
     """ Extracts key details from AI response and formats them neatly. """
-
+    
     if hasattr(response, "content"):
         response_text = response.content
     else:
         response_text = str(response)
 
+    # ✅ Debugging: Show Raw AI Response
+    st.text_area("🛠 Debugging AI Response", response_text, height=200)
+
     try:
-        result = json.loads(response_text)  # ✅ Try parsing as JSON
+        # ✅ Try parsing as JSON
+        result = json.loads(response_text)
     except json.JSONDecodeError:
-        # ✅ If JSON fails, extract manually using regex
-        match_percentage = re.search(r"JD Match:\s*(\d+)%", response_text)
-        match_percentage = match_percentage.group(1) + "%" if match_percentage else "N/A"
-
-        missing_keywords_match = re.search(r"\* \[(.*?)\]", response_text)
-        missing_keywords = missing_keywords_match.group(1).split(", ") if missing_keywords_match else []
-
-        profile_summary_match = re.search(r"Profile Summary:\n(.*?)\n\nNote:", response_text, re.DOTALL)
-        profile_summary = profile_summary_match.group(1).strip() if profile_summary_match else "No summary found."
-
-        # ✅ Display Results in Streamlit
-        st.markdown("## 📊 Resume Analysis Results")
-        st.metric("📊 JD Match", match_percentage)
-
-        st.markdown("### 🔍 Missing Keywords")
-        if missing_keywords:
-            for keyword in missing_keywords:
-                st.markdown(f"- **{keyword}**")
-        else:
-            st.markdown("✅ No missing keywords found.")
-
-        st.markdown("### 📝 Profile Summary")
-        st.markdown(profile_summary)
-
+        # ✅ If JSON parsing fails, show warning & raw text
+        st.warning("⚠️ AI response is not in JSON format. Trying text extraction.")
         return
 
-    # ✅ Display JSON Response
+    # ✅ Display Results in Streamlit
     st.markdown("## 📊 Resume Analysis Results")
     st.metric("📊 JD Match", result.get("JD Match", "N/A"))
 
+    # ✅ Missing Keywords
     st.markdown("### 🔍 Missing Keywords")
     missing_keywords = result.get("MissingKeywords", [])
     if missing_keywords:
@@ -105,6 +89,7 @@ def format_ai_response(response):
     else:
         st.markdown("✅ No missing keywords found.")
 
+    # ✅ Profile Summary
     st.markdown("### 📝 Profile Summary")
     st.markdown(result.get("Profile Summary", "No summary available."))
 

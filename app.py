@@ -10,7 +10,7 @@ genai.configure(api_key=google_api_key)
 
 # Function to get response from Gemini model
 def get_gemini_response(input):
-    model = genai.GenerativeModel('gemini-pro')
+    model = genai.GenerativeModel('gemini-1.5-flash')
     response = model.generate_content(input)
     return response.text
 

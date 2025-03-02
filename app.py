@@ -37,17 +37,17 @@ def extract_text_from_pdf(uploaded_file):
         st.error(f"❌ Error extracting text from PDF: {str(e)}")
         return ""
 
-# ✅ Improved Prompt to Force JSON Output
+# ✅ Improved Prompt to Force JSON Output - FIX: Escape curly braces in the JSON template
 input_prompt = """
 You are a highly accurate ATS (Applicant Tracking System) with expertise in software engineering, data science, and big data.
 Analyze the resume against the job description and return JSON only.
 
 JSON OUTPUT FORMAT:
-{
+{{
     "JD Match": "X%",
     "MissingKeywords": ["keyword1", "keyword2"],
     "Profile Summary": "Your profile summary here"
-}
+}}
 
 Resume:
 {text}

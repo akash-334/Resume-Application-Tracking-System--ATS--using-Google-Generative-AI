@@ -1,15 +1,15 @@
 import streamlit as st
 import openai
 import PyPDF2 as pdf
+import os  # Import os to access environment variables
 
-# OpenAI API Key (Replace with your actual API key)
-from dotenv import load_dotenv
-import os
+# Get the API key from environment variables
+openai_api_key = os.getenv("OPENAI_API_KEY")
 
-# Load environment variables from .env file
-load_dotenv()
-
-openai_api_key = os.getenv("openai_api_key")
+# Check if the API key is available
+if not openai_api_key:
+    st.error("OpenAI API Key is missing. Set it as an environment variable in Render.")
+    st.stop()
 
 # Function to get response from ChatGPT model
 def get_chatgpt_response(input_text):
